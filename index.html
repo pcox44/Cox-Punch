@@ -67,21 +67,21 @@
   <div id="paceChart">Enter a time to see pace chart</div>
 </div>
 
-const minPaceForDistance = {
-  "100": null, // special case — always all out
-  "200": null,
-  "400": "mile pace",
-  "600": "mile pace",
-  "800": "3k pace",
-  "1000": "3k pace",
-  "1200": "10k Punch Pace",
-  "mile": "10k Punch Pace"
-};
   
 <script>
   const distances = ["100", "200", "400", "600", "800", "1000", "1200", "mile", "strides"];
   const paces = ["800m pace", "mile pace", "3k pace", "5k Punch Pace", "10k Punch Pace", "HMP", "MP"];
 
+  const minPaceForDistance = {
+    "100": null, // special case — always all out
+    "200": null,
+    "400": "mile pace",
+    "600": "mile pace",
+    "800": "3k pace",
+    "1000": "3k pace",
+    "1200": "10k Punch Pace",
+    "mile": "10k Punch Pace"
+  };
   const paceMapping = {
     "800m pace": 0,
     "mile pace": 1,
