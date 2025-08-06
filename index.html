@@ -1,63 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cox Punch</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      font-family: Arial, sans-serif;
       padding: 2rem;
-      margin: 0;
-      color: #222;
+      max-width: 900px;
+      margin: auto;
+      background-color: #f8f8f8;
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: row;
       gap: 2rem;
     }
-    .container {
+    .main {
       flex: 2;
-      min-width: 300px;
     }
     .sidebar {
       flex: 1;
-      min-width: 250px;
-      background-color: #ffffffcc;
-      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #ccc;
       padding: 1rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      font-size: 0.9rem;
     }
     h1 {
       text-align: center;
-      color: #2a4d69;
-    }
-    label, select, input, button {
-      display: block;
-      margin-top: 1rem;
-      width: 100%;
-      font-size: 1rem;
     }
     input, select, button {
       padding: 0.5rem;
-      border-radius: 4px;
-    }
-    button {
-      background-color: #2a4d69;
-      color: white;
-      border: none;
-      cursor: pointer;
-      padding: 0.7rem;
-      margin-top: 1.5rem;
-    }
-    button:hover {
-      background-color: #1d3557;
+      font-size: 1rem;
+      margin-top: 0.5rem;
     }
     .result {
       margin-top: 2rem;
       padding: 1rem;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background-color: #fff;
+      border: 1px solid #ccc;
     }
     table {
       width: 100%;
@@ -66,131 +44,163 @@
     }
     th, td {
       border: 1px solid #ccc;
-      padding: 0.5rem;
+      padding: 0.3rem;
       text-align: center;
-    }
-    th {
-      background-color: #f4f4f4;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🏋️‍♂️ Cox Punch</h1>
-    <label for="timeInput">Enter your recent 5K time (mm:ss):</label>
-    <input type="text" id="timeInput" placeholder="e.g. 17:03">
 
-    <button onclick="generateWorkoutFromInput()">Generate Workout</button>
+<div class="main">
+  <h1>🥊 Cox Punch</h1>
 
-    <div class="result" id="result" style="display:none;"></div>
-  </div>
+  <label for="raceType">Select race type:</label><br>
+  <select id="raceType">
+    <option value="5k">5K</option>
+    <option value="10k">10K</option>
+    <option value="mile">Mile</option>
+    <option value="half">Half Marathon</option>
+  </select><br>
 
-  <div class="sidebar">
-    <h3>Your VDOT Training Paces</h3>
-    <div id="paceChart">Enter time to see paces</div>
-  </div>
+  <label for="timeInput">Enter your recent race time (mm:ss):</label><br>
+  <input type="text" id="timeInput" placeholder="e.g. 20:30"><br>
 
-  <script>
-    const vdotTable5k = [
-      { seconds: 960, vdot: 60 },
-      { seconds: 975, vdot: 59 },
-      { seconds: 990, vdot: 58 },
-      { seconds: 1005, vdot: 57 },
-      { seconds: 1020, vdot: 56 },
-      { seconds: 1035, vdot: 55 },
-      { seconds: 1050, vdot: 54 },
-      { seconds: 1065, vdot: 53 },
-      { seconds: 1080, vdot: 52 },
-      { seconds: 1095, vdot: 51 },
-      { seconds: 1110, vdot: 50 },
-      { seconds: 1125, vdot: 49 },
-      { seconds: 1140, vdot: 48 },
-      { seconds: 1155, vdot: 47 },
-      { seconds: 1170, vdot: 46 },
-      { seconds: 1185, vdot: 45 },
-      { seconds: 1200, vdot: 44 }
-    ];
+  <button onclick="generateWorkout()">Generate Workout</button>
 
-    const danielsPaces = {
-      60: { "3k pace": "5:13", "5k pace": "5:25", "10k pace": "5:43", "HMP": "6:02", "MP": "6:21" },
-      59: { "3k pace": "5:17", "5k pace": "5:29", "10k pace": "5:47", "HMP": "6:06", "MP": "6:25" },
-      58: { "3k pace": "5:21", "5k pace": "5:33", "10k pace": "5:52", "HMP": "6:11", "MP": "6:30" },
-      57: { "3k pace": "5:25", "5k pace": "5:38", "10k pace": "5:56", "HMP": "6:15", "MP": "6:34" },
-      56: { "3k pace": "5:30", "5k pace": "5:42", "10k pace": "6:01", "HMP": "6:20", "MP": "6:39" },
-      55: { "3k pace": "5:34", "5k pace": "5:46", "10k pace": "6:06", "HMP": "6:25", "MP": "6:44" },
-      54: { "3k pace": "5:38", "5k pace": "5:51", "10k pace": "6:10", "HMP": "6:29", "MP": "6:49" },
-      53: { "3k pace": "5:43", "5k pace": "5:55", "10k pace": "6:15", "HMP": "6:34", "MP": "6:54" },
-      52: { "3k pace": "5:47", "5k pace": "6:00", "10k pace": "6:20", "HMP": "6:39", "MP": "6:59" },
-      51: { "3k pace": "5:52", "5k pace": "6:04", "10k pace": "6:25", "HMP": "6:44", "MP": "7:04" },
-      50: { "3k pace": "5:57", "5k pace": "6:09", "10k pace": "6:30", "HMP": "6:49", "MP": "7:09" }
-    };
+  <div class="result" id="result" style="display:none;"></div>
+</div>
 
-    function getRandomWorkout(vdot) {
-      const distances = [200, 400, 600, 800, 1000, 1200, 1600];
-      const paceLevels = ["all out", "400 pace", "600 pace", "800 pace", "1600 pace", "3k pace", "5k pace", "10k pace", "HMP", "MP"];
-      const validWorkouts = distances.map(dist => {
-        const minPaceIndex = Math.min(paceLevels.length - 1, Math.max(0, distances.indexOf(dist) + 2));
-        const possiblePaces = paceLevels.slice(minPaceIndex);
-        return { dist, pace: possiblePaces[Math.floor(Math.random() * possiblePaces.length)] };
-      });
-      const chosen = validWorkouts[Math.floor(Math.random() * validWorkouts.length)];
+<div class="sidebar">
+  <h3>Your VDOT Training Paces</h3>
+  <div id="paceChart">Enter a time to see pace chart</div>
+</div>
 
-      let reps = 1;
-      const repChances = [0.5, 0.25, 0.15, 0.1];
-      const options = [1, 2, 3, 4];
-      while (true) {
-        const r = Math.random();
-        let total = 0;
-        for (let i = 0; i < options.length; i++) {
-          total += repChances[i];
-          if (r < total) {
-            reps = options[i];
-            break;
-          }
-        }
-        if (chosen.dist * reps <= 1600 || chosen.dist === 100) break;
+<script>
+  const distances = ["200", "400", "600", "800", "1000", "1200", "mile"];
+  const paces = ["3k pace", "5k pace", "10k pace", "HMP", "MP"];
+
+  const paceMapping = {
+    "3k pace": 2,
+    "5k pace": 3,
+    "10k pace": 4,
+    "HMP": 5,
+    "MP": 6
+  };
+
+  const distanceMapping = {
+    "200": 0,
+    "400": 1,
+    "600": 2,
+    "800": 3,
+    "1000": 4,
+    "1200": 5,
+    "mile": 6
+  };
+
+  const metersLookup = {
+    "200": 200,
+    "400": 400,
+    "600": 600,
+    "800": 800,
+    "1000": 1000,
+    "1200": 1200,
+    "mile": 1609
+  };
+
+  // VDOT Estimates (simplified) for 5k, 10k, mile, half
+  function estimateVDOT(timeMin, timeSec, raceType) {
+    const totalMin = timeMin + timeSec / 60;
+    let vdot;
+    if (raceType === "5k") vdot = 85 - totalMin;
+    else if (raceType === "10k") vdot = 90 - (totalMin / 2);
+    else if (raceType === "mile") vdot = 105 - (totalMin * 3);
+    else if (raceType === "half") vdot = 50 - (totalMin / 6);
+    return Math.max(35, Math.round(vdot));
+  }
+
+  const paceChart = {
+    "3k pace": { 65: 2.91, 60: 3.10, 55: 3.30, 50: 3.50, 45: 4.10, 40: 4.30, 35: 4.50 },
+    "5k pace": { 65: 3.06, 60: 3.21, 55: 3.41, 50: 4.01, 45: 4.21, 40: 4.41, 35: 5.00 },
+    "10k pace": { 65: 3.16, 60: 3.32, 55: 3.52, 50: 4.12, 45: 4.32, 40: 4.52, 35: 5.15 },
+    "HMP": { 65: 3.25, 60: 3.42, 55: 4.02, 50: 4.22, 45: 4.42, 40: 5.00, 35: 5.25 },
+    "MP": { 65: 3.45, 60: 4.00, 55: 4.20, 50: 4.40, 45: 5.00, 40: 5.20, 35: 5.45 }
+  };
+
+  function getTargetPaceSeconds(vdot, paceType, meters) {
+    let level = [65, 60, 55, 50, 45, 40, 35].find(v => vdot >= v) || 35;
+    const perK = paceChart[paceType][level] || 5.0;
+    return perK * (meters / 1000) * 60;
+  }
+
+  function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.round(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  function chooseRepCount(metersPerRep) {
+    const probs = [0.5, 0.25, 0.15, 0.10];
+    const maxReps = [1, 2, 3, 4];
+    for (let i = 3; i >= 0; i--) {
+      const total = metersPerRep * maxReps[i];
+      if (total <= 1609) {
+        const roll = Math.random();
+        if (roll < probs[i]) return maxReps[i];
       }
-
-      return { meters: chosen.dist, paceKey: chosen.pace, reps };
     }
+    return 1;
+  }
 
-    function showPaceChart(vdot) {
-      const chart = danielsPaces[vdot];
-      if (!chart) return;
-      let html = '<table><tr><th>Pace</th><th>min/mi</th></tr>';
-      for (const [key, val] of Object.entries(chart)) {
-        html += `<tr><td>${key}</td><td>${val}</td></tr>`;
-      }
-      html += '</table>';
-      document.getElementById("paceChart").innerHTML = html;
+  function showPaceChart(vdot) {
+    const level = [65, 60, 55, 50, 45, 40, 35].find(v => vdot >= v) || 35;
+    let html = "<table><tr><th>Pace</th><th>min/km</th></tr>";
+    for (let pace in paceChart) {
+      const val = paceChart[pace][level];
+      html += `<tr><td>${pace}</td><td>${val.toFixed(2)}</td></tr>`;
     }
+    html += "</table>";
+    document.getElementById("paceChart").innerHTML = html;
+  }
 
-    function generateWorkoutFromInput() {
-      const input = document.getElementById("timeInput").value.trim();
-      const match = input.match(/^(\d+):(\d{1,2})$/);
-      if (!match) {
-        alert("Please enter time in mm:ss format");
-        return;
-      }
-      const minutes = parseInt(match[1]);
-      const seconds = parseInt(match[2]);
-      const totalSeconds = minutes * 60 + seconds;
-      const vdot = interpolateVDOT(totalSeconds);
-      const workout = getRandomWorkout(vdot);
-      let paceStr;
-      if (workout.paceKey === "all out") {
-        paceStr = "100% effort";
-      } else {
-        paceStr = danielsPaces[vdot][workout.paceKey] || "N/A";
-      }
-      document.getElementById("result").style.display = "block";
-      document.getElementById("result").innerHTML = `<h2>Today's Workout</h2>
-        <p><strong>Distance:</strong> ${workout.meters}m × ${workout.reps}</p>
-        <p><strong>Pace:</strong> ${workout.paceKey}</p>
-        <p><strong>Target per rep:</strong> ${paceStr}</p>
-        <p><strong>Your VDOT:</strong> ${vdot}</p>`;
-      showPaceChart(vdot);
-    }
-  </script>
+  function generateWorkout() {
+    const raceType = document.getElementById("raceType").value;
+    const input = document.getElementById("timeInput").value.trim();
+    const match = input.match(/^(\d+):(\d{1,2})$/);
+    if (!match) return alert("Enter time in mm:ss format");
+
+    const minutes = parseInt(match[1]);
+    const seconds = parseInt(match[2]);
+    const vdot = estimateVDOT(minutes, seconds, raceType);
+    showPaceChart(vdot);
+
+    let dist, paceType, meters, reps = 1;
+
+    // Pick a distance
+    let validDistances = distances.filter(d => {
+      const index = distanceMapping[d];
+      const validPaces = paces.filter(p => paceMapping[p] >= index + 2);
+      return validPaces.length > 0;
+    });
+    dist = validDistances[Math.floor(Math.random() * validDistances.length)];
+    meters = metersLookup[dist];
+
+    // Pick a valid pace
+    const validPaces = paces.filter(p => paceMapping[p] >= distanceMapping[dist] + 2);
+    paceType = validPaces[Math.floor(Math.random() * validPaces.length)];
+
+    reps = chooseRepCount(meters);
+    const targetTime = getTargetPaceSeconds(vdot, paceType, meters);
+
+    document.getElementById("result").style.display = "block";
+    document.getElementById("result").innerHTML = `
+      <h2>Today's Workout</h2>
+      <p><strong>Distance:</strong> ${dist} × ${reps}</p>
+      <p><strong>Pace:</strong> ${paceType}</p>
+      <p><strong>Target Time per Rep:</strong> ${formatTime(targetTime)}</p>
+      <p><em>VDOT ~${vdot} based on your ${raceType.toUpperCase()} time of ${minutes}:${seconds.toString().padStart(2, '0')}</em></p>
+    `;
+  }
+</script>
+
 </body>
 </html>
