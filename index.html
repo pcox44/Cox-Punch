@@ -111,18 +111,58 @@
       { seconds: 1200, vdot: 44 }
     ];
 
-    function interpolateVDOT(timeSec) {
-      for (let i = 0; i < vdotTable5k.length - 1; i++) {
-        const t1 = vdotTable5k[i].seconds;
-        const t2 = vdotTable5k[i + 1].seconds;
-        const v1 = vdotTable5k[i].vdot;
-        const v2 = vdotTable5k[i + 1].vdot;
-        if (timeSec >= t1 && timeSec <= t2) {
-          const ratio = (timeSec - t1) / (t2 - t1);
-          return Math.round((v1 + (v2 - v1) * ratio));
+    const danielsPaces = {
+      60: { "3k pace": "5:13", "5k pace": "5:25", "10k pace": "5:43", "HMP": "6:02", "MP": "6:21" },
+      59: { "3k pace": "5:17", "5k pace": "5:29", "10k pace": "5:47", "HMP": "6:06", "MP": "6:25" },
+      58: { "3k pace": "5:21", "5k pace": "5:33", "10k pace": "5:52", "HMP": "6:11", "MP": "6:30" },
+      57: { "3k pace": "5:25", "5k pace": "5:38", "10k pace": "5:56", "HMP": "6:15", "MP": "6:34" },
+      56: { "3k pace": "5:30", "5k pace": "5:42", "10k pace": "6:01", "HMP": "6:20", "MP": "6:39" },
+      55: { "3k pace": "5:34", "5k pace": "5:46", "10k pace": "6:06", "HMP": "6:25", "MP": "6:44" },
+      54: { "3k pace": "5:38", "5k pace": "5:51", "10k pace": "6:10", "HMP": "6:29", "MP": "6:49" },
+      53: { "3k pace": "5:43", "5k pace": "5:55", "10k pace": "6:15", "HMP": "6:34", "MP": "6:54" },
+      52: { "3k pace": "5:47", "5k pace": "6:00", "10k pace": "6:20", "HMP": "6:39", "MP": "6:59" },
+      51: { "3k pace": "5:52", "5k pace": "6:04", "10k pace": "6:25", "HMP": "6:44", "MP": "7:04" },
+      50: { "3k pace": "5:57", "5k pace": "6:09", "10k pace": "6:30", "HMP": "6:49", "MP": "7:09" }
+    };
+
+    function getRandomWorkout(vdot) {
+      const distances = [200, 400, 600, 800, 1000, 1200, 1600];
+      const paceLevels = ["all out", "400 pace", "600 pace", "800 pace", "1600 pace", "3k pace", "5k pace", "10k pace", "HMP", "MP"];
+      const validWorkouts = distances.map(dist => {
+        const minPaceIndex = Math.min(paceLevels.length - 1, Math.max(0, distances.indexOf(dist) + 2));
+        const possiblePaces = paceLevels.slice(minPaceIndex);
+        return { dist, pace: possiblePaces[Math.floor(Math.random() * possiblePaces.length)] };
+      });
+      const chosen = validWorkouts[Math.floor(Math.random() * validWorkouts.length)];
+
+      let reps = 1;
+      const repChances = [0.5, 0.25, 0.15, 0.1];
+      const options = [1, 2, 3, 4];
+      while (true) {
+        const r = Math.random();
+        let total = 0;
+        for (let i = 0; i < options.length; i++) {
+          total += repChances[i];
+          if (r < total) {
+            reps = options[i];
+            break;
+          }
         }
+        if (chosen.dist * reps <= 1600 || chosen.dist === 100) break;
       }
-      return timeSec < vdotTable5k[0].seconds ? vdotTable5k[0].vdot : vdotTable5k[vdotTable5k.length - 1].vdot;
+
+      return { meters: chosen.dist, paceKey: chosen.pace, reps };
+    }
+
+    function showPaceChart(vdot) {
+      const chart = danielsPaces[vdot];
+      if (!chart) return;
+      let html = '<table><tr><th>Pace</th><th>min/mi</th></tr>';
+      for (const [key, val] of Object.entries(chart)) {
+        html += `<tr><td>${key}</td><td>${val}</td></tr>`;
+      }
+      html += '</table>';
+      document.getElementById("paceChart").innerHTML = html;
     }
 
     function generateWorkoutFromInput() {
@@ -151,8 +191,6 @@
         <p><strong>Your VDOT:</strong> ${vdot}</p>`;
       showPaceChart(vdot);
     }
-
-    // ensure danielsPaces and getRandomWorkout are already defined
   </script>
 </body>
 </html>
