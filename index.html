@@ -88,7 +88,7 @@
     </select>
 
     <label for="timeInput">Enter your time (mm:ss):</label>
-    <input type="text" id="timeInput" placeholder="e.g. 17:02">
+    <input type="text" id="timeInput" placeholder="e.g. 17:03">
 
     <button onclick="generateWorkout()">Generate Workout</button>
 
@@ -102,33 +102,33 @@
 
   <script>
     const vdotTable5k = [
-      { seconds: 900, vdot: 68 },
-      { seconds: 915, vdot: 67 },
-      { seconds: 930, vdot: 66 },
-      { seconds: 945, vdot: 65 },
-      { seconds: 960, vdot: 64 },
-      { seconds: 975, vdot: 63 },
-      { seconds: 990, vdot: 62 },
-      { seconds: 1005, vdot: 61 },
-      { seconds: 1020, vdot: 60 },
-      { seconds: 1035, vdot: 59 },
-      { seconds: 1050, vdot: 58 },
-      { seconds: 1065, vdot: 57 },
-      { seconds: 1080, vdot: 56 },
-      { seconds: 1095, vdot: 55 },
-      { seconds: 1110, vdot: 54 },
-      { seconds: 1125, vdot: 53 },
-      { seconds: 1140, vdot: 52 },
-      { seconds: 1155, vdot: 51 },
-      { seconds: 1170, vdot: 50 },
-      { seconds: 1185, vdot: 49 },
-      { seconds: 1200, vdot: 48 },
-      { seconds: 1215, vdot: 47 },
-      { seconds: 1230, vdot: 46 },
-      { seconds: 1245, vdot: 45 },
-      { seconds: 1260, vdot: 44 },
-      { seconds: 1275, vdot: 43 },
-      { seconds: 1290, vdot: 42 }
+      { seconds: 900, vdot: 61 },
+      { seconds: 915, vdot: 60 },
+      { seconds: 930, vdot: 59 },
+      { seconds: 945, vdot: 58 },
+      { seconds: 960, vdot: 57 },
+      { seconds: 975, vdot: 56 },
+      { seconds: 990, vdot: 55 },
+      { seconds: 1005, vdot: 54 },
+      { seconds: 1020, vdot: 53 },
+      { seconds: 1035, vdot: 52 },
+      { seconds: 1050, vdot: 51 },
+      { seconds: 1065, vdot: 50 },
+      { seconds: 1080, vdot: 49 },
+      { seconds: 1095, vdot: 48 },
+      { seconds: 1110, vdot: 47 },
+      { seconds: 1125, vdot: 46 },
+      { seconds: 1140, vdot: 45 },
+      { seconds: 1155, vdot: 44 },
+      { seconds: 1170, vdot: 43 },
+      { seconds: 1185, vdot: 42 },
+      { seconds: 1200, vdot: 41 },
+      { seconds: 1215, vdot: 40 },
+      { seconds: 1230, vdot: 39 },
+      { seconds: 1245, vdot: 38 },
+      { seconds: 1260, vdot: 37 },
+      { seconds: 1275, vdot: 36 },
+      { seconds: 1290, vdot: 35 }
     ];
 
     function interpolateVDOT(timeSec) {
@@ -145,6 +145,19 @@
       return timeSec < vdotTable5k[0].seconds ? vdotTable5k[0].vdot : vdotTable5k[vdotTable5k.length - 1].vdot;
     }
 
+    function getRandomWorkout() {
+      const distances = [100, 200, 400, 600, 800, 1000, 1200, 1609];
+      const paces = ["400 pace", "800 pace", "1600 pace", "3k pace", "5k pace", "10k pace", "HMP", "MP"];
+      const meters = distances[Math.floor(Math.random() * distances.length)];
+      let reps = 1;
+      if (meters === 100) reps = 4;
+      else if (meters === 200) reps = 1 + Math.floor(Math.random() * 4);
+      else reps = 1 + Math.floor(Math.random() * 3);
+      while (reps * meters > 1609) reps--;
+      const pace = meters === 100 ? "all out" : meters === 200 ? (Math.random() < 0.5 ? "all out" : "400 pace") : paces[Math.floor(Math.random() * paces.length)];
+      return { meters, reps, pace };
+    }
+
     function generateWorkout() {
       const input = document.getElementById("timeInput").value.trim();
       const match = input.match(/^(\d+):(\d{1,2})$/);
@@ -156,15 +169,17 @@
       const minutes = parseInt(match[1]);
       const seconds = parseInt(match[2]);
       const totalSeconds = minutes * 60 + seconds;
-
       const vdot = interpolateVDOT(totalSeconds);
+      const workout = getRandomWorkout();
+      const minPerKm = 60 / (vdot / 10); // Simplified approximation
+      const paceStr = workout.pace === "all out" ? "100% effort" : `${(minPerKm * (workout.meters / 1000)).toFixed(2)} min`;
 
-      const resultDiv = document.getElementById("result");
-      resultDiv.style.display = "block";
-      resultDiv.innerHTML = `<h2>Today's Workout</h2>
-        <p><strong>Input Time:</strong> ${minutes}:${seconds.toString().padStart(2, '0')}</p>
-        <p><strong>Estimated VDOT:</strong> ${vdot}</p>
-        <p><em>More training details coming soon...</em></p>`;
+      document.getElementById("result").style.display = "block";
+      document.getElementById("result").innerHTML = `<h2>Today's Workout</h2>
+        <p><strong>Distance:</strong> ${workout.meters}m × ${workout.reps}</p>
+        <p><strong>Pace:</strong> ${workout.pace}</p>
+        <p><strong>Target per rep:</strong> ${paceStr}</p>
+        <p><strong>Your VDOT:</strong> ${vdot}</p>`;
 
       showPaceChart(vdot);
     }
@@ -173,14 +188,14 @@
       const chart = document.getElementById("paceChart");
       let html = `<table><tr><th>Pace Type</th><th>min/mile</th></tr>`;
       const multipliers = {
-        "400": 5.3,
-        "800": 5.5,
-        "1600": 5.8,
-        "3k": 6.1,
-        "5k": 6.4,
-        "10k": 6.7,
-        "HMP": 7.0,
-        "MP": 7.3
+        "400 pace": 4.7,
+        "800 pace": 4.9,
+        "1600 pace": 5.1,
+        "3k pace": 5.3,
+        "5k pace": 5.5,
+        "10k pace": 5.7,
+        "HMP": 6.0,
+        "MP": 6.3
       };
       for (const [type, perK] of Object.entries(multipliers)) {
         const totalMin = perK * 1.609;
