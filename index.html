@@ -1,1 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cox Punch</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+      background-color: #f8f8f8;
+    }
+    h1 {
+      text-align: center;
+    }
+    input, button {
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-top: 0.5rem;
+    }
+    .result {
+      margin-top: 2rem;
+      padding: 1rem;
+      background-color: #fff;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>🥊 Cox Punch</h1>
+
+  <label for="timeInput">Enter a recent 5K time (mm:ss):</label><br>
+  <input type="text" id="timeInput" placeholder="e.g. 20:30"><br>
+  <button onclick="generateWorkout()">Generate Workout</button>
+
+  <div class="result" id="result" style="display:none;"></div>
+
+  <script>
+    const distances = ["200", "400", "600", "800", "1000", "1200", "mile"];
+    const paces = ["all out", "400 pace", "600 pace", "800 pace", "1600 pace", "3k pace", "5k pace", "10k pace"];
+
+    const paceMapping = {
+      "all out": -3,
+      "400 pace": -2,
+      "600 pace": -1,
+      "800 pace": 0,
+      "1600 pace": 1,
+      "3k pace": 2,
+      "5k pace": 3,
+      "10k pace": 4
+    };
+
+    const distanceMapping = {
+      "200": 0,
+      "400": 1,
+      "600": 2,
+      "800": 3,
+      "1000": 4,
+      "1200": 5,
+      "mile": 6
+    };
+
+    // Approx. VDOT values based on 5k time (rounded)
+    function estimateVDOT(minutes, seconds) {
+      const timeInMinutes = minutes + seconds / 60;
+      const vdotTable = [
+        { time: 15, vdot: 65 },
+        { time: 16, vdot: 62 },
+        { time: 17, vdot: 59 },
+        { time: 18, vdot: 56 },
+        { time: 19, vdot: 53 },
+        { time: 20, vdot: 50 },
+        { time: 21, vdot: 48 },
+        { time: 22, vdot: 46 },
+        { time: 23, vdot: 44 },
+        { time: 24, vdot: 42 },
+        { time: 25, vdot: 41 },
+        { time: 26, vdot: 40 },
+        { time: 27, vdot: 39 },
+        { time: 28, vdot: 38 },
+        { time: 29, vdot: 37 },
+        { time: 30, vdot: 36 },
+        { time: 32, vdot: 35 },
+        { time: 34, vdot: 34 },
+        { time: 36, vdot: 33 },
+        { time: 38, vdot: 32 }
+      ];
+      for (let i = 0; i < vdotTable.length; i++) {
+        if (timeInMinutes <= vdotTable[i].time) {
+          return vdotTable[i].vdot;
+        }
+      }
+      return 30; // default low VDOT
+    }
+
+    // Pacing table (VDOT → pace per distance in seconds)
+    function getTargetPaceSeconds(vdot, paceType, distanceMeters) {
+      const vdotPaces = {
+        65: { "10k": 3.16, "5k": 3.06, "3k": 2.55 },
+        60: { "10k": 3.32, "5k": 3.21, "3k": 3.10 },
+        55: { "10k": 3.52, "5k": 3.41, "3k": 3.30 },
+        50: { "10k": 4.12, "5k": 4.01, "3k": 3.50 },
+        45: { "10k": 4.32, "5k": 4.21, "3k": 4.10 },
+        40: { "10k": 4.52, "5k": 4.41, "3k": 4.30 },
+        35: { "10k": 5.15, "5k": 5.00, "3k": 4.50 },
+        30: { "10k": 5.35, "5k": 5.20, "3k": 5.10 }
+      };
+
+      let level = Object.keys(vdotPaces).reverse().find(v => vdot >= v);
+      let pace = vdotPaces[level];
+
+      let perK;
+      if (paceType === "3k pace") perK = pace["3k"];
+      else if (paceType === "5k pace") perK = pace["5k"];
+      else if (paceType === "10k pace") perK = pace["10k"];
+      else perK = 5.0; // fallback
+
+      return perK * (distanceMeters / 1000) * 60;
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.round(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function generateWorkout() {
+      const input = document.getElementById("timeInput").value.trim();
+      const match = input.match(/^(\d+):(\d{1,2})$/);
+      if (!match) {
+        alert("Please enter time in mm:ss format");
+        return;
+      }
+      const [_, minStr, secStr] = match;
+      const minutes = parseInt(minStr);
+      const seconds = parseInt(secStr);
+      const vdot = estimateVDOT(minutes, seconds);
+
+      // Random distance
+      const randDist = distances[Math.floor(Math.random() * distances.length)];
+      const distIndex = distanceMapping[randDist];
+
+      // Filter paces that are 2+ levels above distance
+      const validPaces = paces.filter(p => paceMapping[p] >= distIndex + 2);
+      const paceType = validPaces[Math.floor(Math.random() * validPaces.length)];
+
+      // Distance to meters
+      let distMeters = randDist === "mile" ? 1609 : parseInt(randDist);
+
+      // Get target time
+      const targetSeconds = getTargetPaceSeconds(vdot, paceType, distMeters);
+
+      document.getElementById("result").style.display = "block";
+      document.getElementById("result").innerHTML = `
+        <h2>Today's Workout</h2>
+        <p><strong>Distance:</strong> ${randDist}</p>
+        <p><strong>Pace:</strong> ${paceType}</p>
+        <p><strong>Your Target Time:</strong> ${formatTime(targetSeconds)}</p>
+        <p><em>Based on your 5K time of ${minutes}:${seconds.toString().padStart(2, '0')} (VDOT ~${vdot})</em></p>
+      `;
+    }
+  </script>
+</body>
+</html>
 
