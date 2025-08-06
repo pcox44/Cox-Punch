@@ -118,6 +118,10 @@
       { seconds: 1200, vdot: 44 }
     ];
 
+    const paceZones = [
+      "400 pace", "800 pace", "1600 pace", "3k pace", "5k pace", "10k pace", "HMP", "MP"
+    ];
+
     function interpolateVDOT(timeSec) {
       for (let i = 0; i < vdotTable5k.length - 1; i++) {
         const t1 = vdotTable5k[i].seconds;
@@ -132,9 +136,14 @@
       return timeSec < vdotTable5k[0].seconds ? vdotTable5k[0].vdot : vdotTable5k[vdotTable5k.length - 1].vdot;
     }
 
+    function getValidPaces(distance) {
+      const index = [100, 200, 400, 600, 800, 1000, 1200, 1609].indexOf(distance);
+      return index < 0 ? [] : paceZones.slice(index + 2);
+    }
+
     function getRandomWorkout() {
       const distances = [100, 200, 400, 600, 800, 1000, 1200, 1609];
-      const paces = {
+      const paceValues = {
         "400 pace": 4.7,
         "800 pace": 4.9,
         "1600 pace": 5.1,
@@ -150,8 +159,9 @@
       else if (meters === 200) reps = 1 + Math.floor(Math.random() * 4);
       else reps = 1 + Math.floor(Math.random() * 3);
       while (reps * meters > 1609) reps--;
-      const paceKey = meters === 100 ? "all out" : meters === 200 ? (Math.random() < 0.5 ? "all out" : "400 pace") : Object.keys(paces)[Math.floor(Math.random() * Object.keys(paces).length)];
-      return { meters, reps, paceKey, paceValue: paces[paceKey] };
+      const validPaces = meters === 100 ? ["all out"] : meters === 200 ? ["all out", "400 pace"] : getValidPaces(meters);
+      const paceKey = validPaces[Math.floor(Math.random() * validPaces.length)];
+      return { meters, reps, paceKey, paceValue: paceValues[paceKey] };
     }
 
     function generateWorkout() {
@@ -172,8 +182,7 @@
       if (workout.paceKey === "all out") {
         paceStr = "100% effort";
       } else {
-        const paceMinPerK = workout.paceValue;
-        const paceMin = paceMinPerK * (workout.meters / 1000);
+        const paceMin = workout.paceValue * (workout.meters / 1000);
         const totalSec = Math.round(paceMin * 60);
         const m = Math.floor(totalSec / 60);
         const s = totalSec % 60;
@@ -192,8 +201,7 @@
 
     function showPaceChart(vdot) {
       const chart = document.getElementById("paceChart");
-      let html = `<table><tr><th>Pace Type</th><th>min/mile</th></tr>`;
-      const multipliers = {
+      const paceValues = {
         "400 pace": 4.7,
         "800 pace": 4.9,
         "1600 pace": 5.1,
@@ -203,10 +211,11 @@
         "HMP": 6.0,
         "MP": 6.3
       };
-      for (const [type, perK] of Object.entries(multipliers)) {
-        const totalMin = perK * 1.609;
-        const min = Math.floor(totalMin);
-        const sec = Math.round((totalMin - min) * 60);
+      let html = `<table><tr><th>Pace Type</th><th>min/mile</th></tr>`;
+      for (const [type, perK] of Object.entries(paceValues)) {
+        const perMile = perK * 1.609;
+        const min = Math.floor(perMile);
+        const sec = Math.round((perMile - min) * 60);
         html += `<tr><td>${type}</td><td>${min}:${sec.toString().padStart(2, '0')}</td></tr>`;
       }
       html += `</table>`;
