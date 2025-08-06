@@ -1,41 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cox Punch</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
       padding: 2rem;
-      max-width: 1000px;
-      margin: auto;
-      background-color: #f8f8f8;
+      margin: 0;
+      color: #222;
       display: flex;
-      flex-direction: row;
+      flex-wrap: wrap;
       gap: 2rem;
     }
-    .main {
+    .container {
       flex: 2;
+      min-width: 300px;
     }
     .sidebar {
       flex: 1;
-      background: #fff;
-      border: 1px solid #ccc;
+      min-width: 250px;
+      background-color: #ffffffcc;
+      border-radius: 8px;
       padding: 1rem;
-      font-size: 0.9rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     h1 {
       text-align: center;
+      color: #2a4d69;
     }
-    input, select, button {
-      padding: 0.5rem;
+    label, select, input, button {
+      display: block;
+      margin-top: 1rem;
+      width: 100%;
       font-size: 1rem;
-      margin-top: 0.5rem;
+    }
+    input, select {
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #2a4d69;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0.7rem;
+      margin-top: 1.5rem;
+    }
+    button:hover {
+      background-color: #1d3557;
     }
     .result {
       margin-top: 2rem;
       padding: 1rem;
-      background-color: #fff;
-      border: 1px solid #ccc;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     table {
       width: 100%;
@@ -44,173 +68,129 @@
     }
     th, td {
       border: 1px solid #ccc;
-      padding: 0.3rem;
+      padding: 0.5rem;
       text-align: center;
+    }
+    th {
+      background-color: #f4f4f4;
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>🏋️‍♂️ Cox Punch</h1>
+    <label for="raceType">Select race type:</label>
+    <select id="raceType">
+      <option value="5k">5K</option>
+      <option value="10k">10K</option>
+      <option value="mile">Mile</option>
+      <option value="half">Half Marathon</option>
+    </select>
 
-<div class="main">
-  <h1>🥊 Cox Punch</h1>
+    <label for="timeInput">Enter your time (mm:ss):</label>
+    <input type="text" id="timeInput" placeholder="e.g. 17:02">
 
-  <label for="raceType">Race type:</label><br>
-  <select id="raceType">
-    <option value="5k">5K</option>
-    <option value="10k">10K</option>
-    <option value="mile">Mile</option>
-    <option value="half">Half Marathon</option>
-  </select><br>
+    <button onclick="generateWorkout()">Generate Workout</button>
 
-  <label for="timeInput">Time (mm:ss):</label><br>
-  <input type="text" id="timeInput" placeholder="e.g. 17:02"><br>
-  <button onclick="generateWorkout()">Generate Workout</button>
+    <div class="result" id="result" style="display:none;"></div>
+  </div>
 
-  <div class="result" id="result" style="display:none;"></div>
-</div>
+  <div class="sidebar">
+    <h3>Your VDOT Training Paces</h3>
+    <div id="paceChart">Enter a time to see pace chart</div>
+  </div>
 
-<div class="sidebar">
-  <h3>Your VDOT Training Paces</h3>
-  <div id="paceChart">Enter a time to see pace chart</div>
-</div>
+  <script>
+    const vdotTable5k = [
+      { seconds: 900, vdot: 68 },
+      { seconds: 915, vdot: 67 },
+      { seconds: 930, vdot: 66 },
+      { seconds: 945, vdot: 65 },
+      { seconds: 960, vdot: 64 },
+      { seconds: 975, vdot: 63 },
+      { seconds: 990, vdot: 62 },
+      { seconds: 1005, vdot: 61 },
+      { seconds: 1020, vdot: 60 },
+      { seconds: 1035, vdot: 59 },
+      { seconds: 1050, vdot: 58 },
+      { seconds: 1065, vdot: 57 },
+      { seconds: 1080, vdot: 56 },
+      { seconds: 1095, vdot: 55 },
+      { seconds: 1110, vdot: 54 },
+      { seconds: 1125, vdot: 53 },
+      { seconds: 1140, vdot: 52 },
+      { seconds: 1155, vdot: 51 },
+      { seconds: 1170, vdot: 50 },
+      { seconds: 1185, vdot: 49 },
+      { seconds: 1200, vdot: 48 },
+      { seconds: 1215, vdot: 47 },
+      { seconds: 1230, vdot: 46 },
+      { seconds: 1245, vdot: 45 },
+      { seconds: 1260, vdot: 44 },
+      { seconds: 1275, vdot: 43 },
+      { seconds: 1290, vdot: 42 }
+    ];
 
-<script>
-  const metersLookup = {
-    "100": 100,
-    "200": 200,
-    "400": 400,
-    "600": 600,
-    "800": 800,
-    "1000": 1000,
-    "1200": 1200,
-    "mile": 1609
-  };
-
-  const paces = ["400 pace", "800 pace", "1600 pace", "3k pace", "5k pace", "10k pace", "HMP", "MP", "all out"];
-  const distances = ["100", "200", "400", "600", "800", "1000", "1200", "mile"];
-
-  // Daniels lookup table (VDOT ≈ input time based on race)
-  function estimateVDOT(minutes, seconds, type) {
-    const totalSec = minutes * 60 + seconds;
-    const time = totalSec;
-    let vdot;
-
-    if (type === "5k") {
-      if (time <= 900) return 68;
-      if (time >= 1500) return 35;
-      vdot = 83.5 - 0.0365 * time; // calibrated to Daniels
-    } else if (type === "10k") {
-      if (time <= 1900) return 68;
-      if (time >= 3000) return 35;
-      vdot = 81.0 - 0.0275 * time;
-    } else if (type === "mile") {
-      if (time <= 240) return 68;
-      if (time >= 600) return 35;
-      vdot = 93 - 0.066 * time;
-    } else if (type === "half") {
-      if (time <= 3600) return 68;
-      if (time >= 7200) return 35;
-      vdot = 73 - 0.0082 * time;
-    }
-
-    return Math.round(vdot);
-  }
-
-  function paceToMinSecPerMile(perK) {
-    const perMile = perK * 1.609;
-    const totalSec = Math.round(perMile * 60);
-    const min = Math.floor(totalSec / 60);
-    const sec = totalSec % 60;
-    return `${min}:${sec.toString().padStart(2, '0')}`;
-  }
-
-  const paceChart = {
-    "400 pace": { 68: 3.70, 60: 4.00, 55: 4.30, 50: 4.60, 45: 5.00, 40: 5.30, 35: 5.60 },
-    "800 pace": { 68: 3.80, 60: 4.20, 55: 4.50, 50: 4.80, 45: 5.10, 40: 5.50, 35: 6.00 },
-    "1600 pace": { 68: 4.00, 60: 4.40, 55: 4.80, 50: 5.20, 45: 5.60, 40: 6.00, 35: 6.40 },
-    "3k pace": { 68: 4.20, 60: 4.60, 55: 5.00, 50: 5.40, 45: 5.80, 40: 6.20, 35: 6.60 },
-    "5k pace": { 68: 4.40, 60: 4.80, 55: 5.20, 50: 5.60, 45: 6.00, 40: 6.40, 35: 6.80 },
-    "10k pace": { 68: 4.55, 60: 5.00, 55: 5.45, 50: 6.00, 45: 6.45, 40: 7.00, 35: 7.45 },
-    "HMP": { 68: 4.70, 60: 5.20, 55: 5.65, 50: 6.10, 45: 6.55, 40: 7.10, 35: 7.65 },
-    "MP": { 68: 4.90, 60: 5.40, 55: 5.90, 50: 6.40, 45: 6.90, 40: 7.40, 35: 7.90 }
-  };
-
-  function getPaceSeconds(vdot, paceType, meters) {
-    const level = [68, 60, 55, 50, 45, 40, 35].find(v => vdot >= v) || 35;
-    const perK = paceChart[paceType][level] || 5.5;
-    return perK * (meters / 1000) * 60;
-  }
-
-  function formatTime(sec) {
-    const min = Math.floor(sec / 60);
-    const s = Math.round(sec % 60);
-    return `${min}:${s.toString().padStart(2, '0')}`;
-  }
-
-  function showPaceChart(vdot) {
-    const level = [68, 60, 55, 50, 45, 40, 35].find(v => vdot >= v) || 35;
-    let html = `<table><tr><th>Pace</th><th>min/mile</th></tr>`;
-    for (const pace in paceChart) {
-      const val = paceToMinSecPerMile(paceChart[pace][level]);
-      html += `<tr><td>${pace}</td><td>${val}</td></tr>`;
-    }
-    html += "</table>";
-    document.getElementById("paceChart").innerHTML = html;
-  }
-
-  function weightedRepCount(meters) {
-    const options = [1, 2, 3, 4];
-    const weights = [0.5, 0.25, 0.15, 0.10];
-    for (let i = 3; i >= 0; i--) {
-      if (meters * options[i] <= 1609) {
-        if (Math.random() < weights[i]) return options[i];
+    function interpolateVDOT(timeSec) {
+      for (let i = 0; i < vdotTable5k.length - 1; i++) {
+        const t1 = vdotTable5k[i].seconds;
+        const t2 = vdotTable5k[i + 1].seconds;
+        const v1 = vdotTable5k[i].vdot;
+        const v2 = vdotTable5k[i + 1].vdot;
+        if (timeSec >= t1 && timeSec <= t2) {
+          const ratio = (timeSec - t1) / (t2 - t1);
+          return Math.round((v1 + (v2 - v1) * ratio) * 10) / 10;
+        }
       }
-    }
-    return 1;
-  }
-
-  function generateWorkout() {
-    const type = document.getElementById("raceType").value;
-    const input = document.getElementById("timeInput").value.trim();
-    const match = input.match(/^(\d+):(\d{1,2})$/);
-    if (!match) return alert("Enter time in mm:ss format");
-
-    const min = parseInt(match[1]);
-    const sec = parseInt(match[2]);
-    const vdot = estimateVDOT(min, sec, type);
-    showPaceChart(vdot);
-
-    let dist = distances[Math.floor(Math.random() * distances.length)];
-    let meters = metersLookup[dist];
-    let reps = 1;
-    let pace;
-
-    if (dist === "100") {
-      reps = 4;
-      pace = "all out";
-    } else if (dist === "200") {
-      const allowed = ["all out", "400 pace"];
-      pace = allowed[Math.floor(Math.random() * allowed.length)];
-      reps = weightedRepCount(meters);
-    } else {
-      const validPaces = paces.filter(p => p !== "all out" && paceChart[p]);
-      pace = validPaces[Math.floor(Math.random() * validPaces.length)];
-      reps = weightedRepCount(meters);
+      return timeSec < vdotTable5k[0].seconds ? vdotTable5k[0].vdot : vdotTable5k[vdotTable5k.length - 1].vdot;
     }
 
-    const target = pace === "all out" ? "100% effort" : formatTime(getPaceSeconds(vdot, pace, meters));
+    function generateWorkout() {
+      const input = document.getElementById("timeInput").value.trim();
+      const match = input.match(/^(\d+):(\d{1,2})$/);
+      if (!match) {
+        alert("Please enter time in mm:ss format");
+        return;
+      }
 
-    document.getElementById("result").style.display = "block";
-    document.getElementById("result").innerHTML = `
-      <h2>Today's Workout</h2>
-      <p><strong>Distance:</strong> ${dist} × ${reps}</p>
-      <p><strong>Pace:</strong> ${pace}</p>
-      <p><strong>Target Time per Rep:</strong> ${target}</p>
-      <p><em>Based on your ${type.toUpperCase()} time of ${min}:${sec
-        .toString()
-        .padStart(2, "0")} (VDOT ≈ ${vdot})</em></p>
-    `;
-  }
-</script>
+      const minutes = parseInt(match[1]);
+      const seconds = parseInt(match[2]);
+      const totalSeconds = minutes * 60 + seconds;
+
+      const vdot = interpolateVDOT(totalSeconds);
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.style.display = "block";
+      resultDiv.innerHTML = `<h2>Today's Workout</h2>
+        <p><strong>Input Time:</strong> ${minutes}:${seconds.toString().padStart(2, '0')}</p>
+        <p><strong>Estimated VDOT:</strong> ${vdot}</p>
+        <p><em>More training details coming soon...</em></p>`;
+
+      showPaceChart(vdot);
+    }
+
+    function showPaceChart(vdot) {
+      const chart = document.getElementById("paceChart");
+      let html = `<table><tr><th>Pace Type</th><th>min/mile</th></tr>`;
+      const multipliers = {
+        "400": 5.3,
+        "800": 5.5,
+        "1600": 5.8,
+        "3k": 6.1,
+        "5k": 6.4,
+        "10k": 6.7,
+        "HMP": 7.0,
+        "MP": 7.3
+      };
+      for (const [type, perK] of Object.entries(multipliers)) {
+        const totalMin = perK * 1.609;
+        const min = Math.floor(totalMin);
+        const sec = Math.round((totalMin - min) * 60);
+        html += `<tr><td>${type}</td><td>${min}:${sec.toString().padStart(2, '0')}</td></tr>`;
+      }
+      html += `</table>`;
+      chart.innerHTML = html;
+    }
+  </script>
 </body>
 </html>
