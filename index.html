@@ -178,7 +178,14 @@
       output += `<p><strong>Workout:</strong> 6 strides at max effort</p>`;
     } else {
       const index = distanceMapping[dist];
-      const validPaces = paces.filter(p => paceMapping[p] >= index + 2);
+      let validPaces;
+
+      if (dist === "1200" || dist === "mile") {
+        validPaces = ["10k Punch Pace", "HMP", "MP"];
+      } else {
+        validPaces = paces.filter(p => paceMapping[p] >= index + 2);
+      }
+
       const paceType = validPaces[Math.floor(Math.random() * validPaces.length)];
       const meters = metersLookup[dist];
       const reps = chooseRepCount(meters);
