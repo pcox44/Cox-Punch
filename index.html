@@ -52,17 +52,9 @@
 <body>
 
 <div class="main">
-  <h1>🥊 Cox Punch</h1>
+  <h1>🍊 Cox Punch</h1>
 
-  <label for="raceType">Select race type:</label><br>
-  <select id="raceType">
-    <option value="5k">5K</option>
-    <option value="10k">10K</option>
-    <option value="mile">Mile</option>
-    <option value="half">Half Marathon</option>
-  </select><br>
-
-  <label for="timeInput">Enter your recent race time (mm:ss):</label><br>
+  <label for="timeInput">Enter your recent 5K time (mm:ss):</label><br>
   <input type="text" id="timeInput" placeholder="e.g. 20:30"><br>
 
   <button onclick="generateWorkout()">Generate Workout</button>
@@ -76,7 +68,7 @@
 </div>
 
 <script>
-  const distances = ["200", "400", "600", "800", "1000", "1200", "mile"];
+  const distances = ["100", "200", "400", "600", "800", "1000", "1200", "mile", "strides"];
   const paces = ["3k pace", "5k pace", "10k pace", "HMP", "MP"];
 
   const paceMapping = {
@@ -88,6 +80,7 @@
   };
 
   const distanceMapping = {
+    "100": 0,
     "200": 0,
     "400": 1,
     "600": 2,
@@ -98,6 +91,7 @@
   };
 
   const metersLookup = {
+    "100": 100,
     "200": 200,
     "400": 400,
     "600": 600,
@@ -107,98 +101,105 @@
     "mile": 1609
   };
 
-  // VDOT Estimates (simplified) for 5k, 10k, mile, half
-  function estimateVDOT(timeMin, timeSec, raceType) {
-    const totalMin = timeMin + timeSec / 60;
-    let vdot;
-    if (raceType === "5k") vdot = 85 - totalMin;
-    else if (raceType === "10k") vdot = 90 - (totalMin / 2);
-    else if (raceType === "mile") vdot = 105 - (totalMin * 3);
-    else if (raceType === "half") vdot = 50 - (totalMin / 6);
-    return Math.max(35, Math.round(vdot));
-  }
+  const vdotTable = [
+    { vdot: 65, time: "16:30" },
+    { vdot: 64, time: "16:41" },
+    { vdot: 63, time: "16:52" },
+    { vdot: 62, time: "17:03" },
+    { vdot: 61, time: "17:14" },
+    { vdot: 60, time: "17:25" },
+    { vdot: 59, time: "17:36" },
+    { vdot: 58, time: "17:48" },
+    { vdot: 57, time: "17:59" },
+    { vdot: 56, time: "18:10" },
+    { vdot: 55, time: "18:21" },
+    { vdot: 54, time: "18:33" },
+    { vdot: 53, time: "18:44" },
+    { vdot: 52, time: "18:56" },
+    { vdot: 51, time: "19:07" },
+    { vdot: 50, time: "19:19" },
+    { vdot: 49, time: "19:31" },
+    { vdot: 48, time: "19:43" },
+    { vdot: 47, time: "19:55" },
+    { vdot: 46, time: "20:07" },
+    { vdot: 45, time: "20:19" }
+  ];
 
   const paceChart = {
-    "3k pace": { 65: 2.91, 60: 3.10, 55: 3.30, 50: 3.50, 45: 4.10, 40: 4.30, 35: 4.50 },
-    "5k pace": { 65: 3.06, 60: 3.21, 55: 3.41, 50: 4.01, 45: 4.21, 40: 4.41, 35: 5.00 },
-    "10k pace": { 65: 3.16, 60: 3.32, 55: 3.52, 50: 4.12, 45: 4.32, 40: 4.52, 35: 5.15 },
-    "HMP": { 65: 3.25, 60: 3.42, 55: 4.02, 50: 4.22, 45: 4.42, 40: 5.00, 35: 5.25 },
-    "MP": { 65: 3.45, 60: 4.00, 55: 4.20, 50: 4.40, 45: 5.00, 40: 5.20, 35: 5.45 }
+    "3k pace": { 65: "4:41", 60: "4:59", 55: "5:20", 50: "5:41", 45: "6:03" },
+    "5k pace": { 65: "4:55", 60: "5:13", 55: "5:34", 50: "5:55", 45: "6:17" },
+    "10k pace": { 65: "5:05", 60: "5:24", 55: "5:46", 50: "6:08", 45: "6:31" },
+    "HMP": { 65: "5:15", 60: "5:35", 55: "5:58", 50: "6:22", 45: "6:45" },
+    "MP": { 65: "5:35", 60: "5:56", 55: "6:20", 50: "6:45", 45: "7:10" }
   };
 
-  function getTargetPaceSeconds(vdot, paceType, meters) {
-    let level = [65, 60, 55, 50, 45, 40, 35].find(v => vdot >= v) || 35;
-    const perK = paceChart[paceType][level] || 5.0;
-    return perK * (meters / 1000) * 60;
-  }
-
-  function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.round(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  }
-
-  function chooseRepCount(metersPerRep) {
-    const probs = [0.5, 0.25, 0.15, 0.10];
-    const maxReps = [1, 2, 3, 4];
-    for (let i = 3; i >= 0; i--) {
-      const total = metersPerRep * maxReps[i];
-      if (total <= 1609) {
-        const roll = Math.random();
-        if (roll < probs[i]) return maxReps[i];
-      }
+  function estimateVDOT(minutes, seconds) {
+    const timeSec = minutes * 60 + seconds;
+    for (let i = 0; i < vdotTable.length; i++) {
+      const [min, sec] = vdotTable[i].time.split(":".map(Number));
+      const compSec = parseInt(min) * 60 + parseInt(sec);
+      if (timeSec <= compSec) return vdotTable[i].vdot;
     }
-    return 1;
+    return 45;
   }
 
   function showPaceChart(vdot) {
-    const level = [65, 60, 55, 50, 45, 40, 35].find(v => vdot >= v) || 35;
-    let html = "<table><tr><th>Pace</th><th>min/km</th></tr>";
+    let html = "<table><tr><th>Pace</th><th>min/mi</th></tr>";
     for (let pace in paceChart) {
-      const val = paceChart[pace][level];
-      html += `<tr><td>${pace}</td><td>${val.toFixed(2)}</td></tr>`;
+      html += `<tr><td>${pace}</td><td>${paceChart[pace][vdot] || "--"}</td></tr>`;
     }
     html += "</table>";
     document.getElementById("paceChart").innerHTML = html;
   }
 
   function generateWorkout() {
-    const raceType = document.getElementById("raceType").value;
     const input = document.getElementById("timeInput").value.trim();
     const match = input.match(/^(\d+):(\d{1,2})$/);
     if (!match) return alert("Enter time in mm:ss format");
 
     const minutes = parseInt(match[1]);
     const seconds = parseInt(match[2]);
-    const vdot = estimateVDOT(minutes, seconds, raceType);
+    const vdot = estimateVDOT(minutes, seconds);
     showPaceChart(vdot);
 
-    let dist, paceType, meters, reps = 1;
+    const availableDistances = ["100", "200", "400", "600", "800", "1000", "1200", "mile", "strides"];
+    const dist = availableDistances[Math.floor(Math.random() * availableDistances.length)];
 
-    // Pick a distance
-    let validDistances = distances.filter(d => {
-      const index = distanceMapping[d];
+    let output = `<h2>Today's Workout</h2>`;
+
+    if (dist === "100") {
+      output += `<p><strong>Distance:</strong> 100m × 4</p>`;
+      output += `<p><strong>Pace:</strong> All out</p>`;
+    } else if (dist === "strides") {
+      output += `<p><strong>Workout:</strong> 6 strides at max effort</p>`;
+    } else {
+      const index = distanceMapping[dist];
       const validPaces = paces.filter(p => paceMapping[p] >= index + 2);
-      return validPaces.length > 0;
-    });
-    dist = validDistances[Math.floor(Math.random() * validDistances.length)];
-    meters = metersLookup[dist];
+      const paceType = validPaces[Math.floor(Math.random() * validPaces.length)];
+      const meters = metersLookup[dist];
+      const reps = chooseRepCount(meters);
+      const paceStr = paceChart[paceType][vdot] || "--";
+      output += `<p><strong>Distance:</strong> ${dist} × ${reps}</p>`;
+      output += `<p><strong>Pace:</strong> ${paceType}</p>`;
+      output += `<p><strong>Target Pace:</strong> ${paceStr} per mile</p>`;
+    }
 
-    // Pick a valid pace
-    const validPaces = paces.filter(p => paceMapping[p] >= distanceMapping[dist] + 2);
-    paceType = validPaces[Math.floor(Math.random() * validPaces.length)];
-
-    reps = chooseRepCount(meters);
-    const targetTime = getTargetPaceSeconds(vdot, paceType, meters);
-
+    output += `<p><em>VDOT ~${vdot} based on your 5K time of ${minutes}:${seconds.toString().padStart(2, '0')}</em></p>`;
     document.getElementById("result").style.display = "block";
-    document.getElementById("result").innerHTML = `
-      <h2>Today's Workout</h2>
-      <p><strong>Distance:</strong> ${dist} × ${reps}</p>
-      <p><strong>Pace:</strong> ${paceType}</p>
-      <p><strong>Target Time per Rep:</strong> ${formatTime(targetTime)}</p>
-      <p><em>VDOT ~${vdot} based on your ${raceType.toUpperCase()} time of ${minutes}:${seconds.toString().padStart(2, '0')}</em></p>
-    `;
+    document.getElementById("result").innerHTML = output;
+  }
+
+  function chooseRepCount(metersPerRep) {
+    const reps = [1, 2, 3, 4];
+    const weights = [0.5, 0.25, 0.15, 0.10];
+    let filtered = reps.filter(r => r * metersPerRep <= 1609);
+    let totalWeight = filtered.reduce((sum, r, i) => sum + weights[i], 0);
+    let rnd = Math.random() * totalWeight;
+    for (let i = 0; i < filtered.length; i++) {
+      if (rnd < weights[i]) return filtered[i];
+      rnd -= weights[i];
+    }
+    return 1;
   }
 </script>
 
