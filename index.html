@@ -57,7 +57,7 @@
   <label for="timeInput">Enter your recent 5K time (mm:ss):</label><br>
   <input type="text" id="timeInput" placeholder="e.g. 20:30"><br>
 
-  <button onclick="generateWorkout()">Generate Workout</button>
+  <button id="generateBtn">Generate Workout</button>
 
   <div class="result" id="result" style="display:none;"></div>
 </div>
@@ -152,6 +152,19 @@
     document.getElementById("paceChart").innerHTML = html;
   }
 
+  function chooseRepCount(metersPerRep) {
+    const reps = [1, 2, 3, 4];
+    const weights = [0.5, 0.25, 0.15, 0.10];
+    let filtered = reps.filter((r, i) => r * metersPerRep <= 1609);
+    let totalWeight = filtered.reduce((sum, r, i) => sum + weights[i], 0);
+    let rnd = Math.random() * totalWeight;
+    for (let i = 0; i < filtered.length; i++) {
+      if (rnd < weights[i]) return filtered[i];
+      rnd -= weights[i];
+    }
+    return 1;
+  }
+
   function generateWorkout() {
     const input = document.getElementById("timeInput").value.trim();
     const match = input.match(/^(\d+):(\d{1,2})$/);
@@ -189,18 +202,7 @@
     document.getElementById("result").innerHTML = output;
   }
 
-  function chooseRepCount(metersPerRep) {
-    const reps = [1, 2, 3, 4];
-    const weights = [0.5, 0.25, 0.15, 0.10];
-    let filtered = reps.filter(r => r * metersPerRep <= 1609);
-    let totalWeight = filtered.reduce((sum, r, i) => sum + weights[i], 0);
-    let rnd = Math.random() * totalWeight;
-    for (let i = 0; i < filtered.length; i++) {
-      if (rnd < weights[i]) return filtered[i];
-      rnd -= weights[i];
-    }
-    return 1;
-  }
+  document.getElementById("generateBtn").addEventListener("click", generateWorkout);
 </script>
 
 </body>
