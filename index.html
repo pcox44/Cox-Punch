@@ -136,12 +136,13 @@
   function estimateVDOT(minutes, seconds) {
     const timeSec = minutes * 60 + seconds;
     for (let i = 0; i < vdotTable.length; i++) {
-      const [min, sec] = vdotTable[i].time.split(":".map(Number));
-      const compSec = parseInt(min) * 60 + parseInt(sec);
+      const [min, sec] = vdotTable[i].time.split(":").map(Number);
+      const compSec = min * 60 + sec;
       if (timeSec <= compSec) return vdotTable[i].vdot;
     }
     return 45;
   }
+
 
   function showPaceChart(vdot) {
     let html = "<table><tr><th>Pace</th><th>min/mi</th></tr>";
