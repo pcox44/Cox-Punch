@@ -118,9 +118,24 @@
       { seconds: 1200, vdot: 44 }
     ];
 
-    const paceZones = [
-      "400 pace", "800 pace", "1600 pace", "3k pace", "5k pace", "10k pace", "HMP", "MP"
-    ];
+    const danielsPaces = {
+      50: { "400 pace": "1:22", "800 pace": "2:52", "1600 pace": "5:56", "3k pace": "6:07", "5k pace": "6:21", "10k pace": "6:36", "HMP": "7:00", "MP": "7:21" },
+      51: { "400 pace": "1:21", "800 pace": "2:50", "1600 pace": "5:51", "3k pace": "6:02", "5k pace": "6:16", "10k pace": "6:31", "HMP": "6:55", "MP": "7:16" },
+      52: { "400 pace": "1:20", "800 pace": "2:48", "1600 pace": "5:46", "3k pace": "5:57", "5k pace": "6:11", "10k pace": "6:26", "HMP": "6:50", "MP": "7:11" },
+      53: { "400 pace": "1:19", "800 pace": "2:46", "1600 pace": "5:41", "3k pace": "5:52", "5k pace": "6:06", "10k pace": "6:21", "HMP": "6:45", "MP": "7:06" },
+      54: { "400 pace": "1:18", "800 pace": "2:44", "1600 pace": "5:36", "3k pace": "5:47", "5k pace": "6:01", "10k pace": "6:16", "HMP": "6:40", "MP": "7:01" },
+      55: { "400 pace": "1:17", "800 pace": "2:42", "1600 pace": "5:31", "3k pace": "5:42", "5k pace": "5:56", "10k pace": "6:11", "HMP": "6:35", "MP": "6:56" },
+      56: { "400 pace": "1:16", "800 pace": "2:40", "1600 pace": "5:26", "3k pace": "5:37", "5k pace": "5:51", "10k pace": "6:06", "HMP": "6:30", "MP": "6:51" },
+      57: { "400 pace": "1:15", "800 pace": "2:38", "1600 pace": "5:21", "3k pace": "5:32", "5k pace": "5:46", "10k pace": "6:01", "HMP": "6:25", "MP": "6:46" },
+      58: { "400 pace": "1:14", "800 pace": "2:36", "1600 pace": "5:16", "3k pace": "5:27", "5k pace": "5:41", "10k pace": "5:56", "HMP": "6:20", "MP": "6:41" },
+      59: { "400 pace": "1:13", "800 pace": "2:34", "1600 pace": "5:11", "3k pace": "5:22", "5k pace": "5:36", "10k pace": "5:51", "HMP": "6:15", "MP": "6:36" },
+      60: { "400 pace": "1:12", "800 pace": "2:32", "1600 pace": "5:06", "3k pace": "5:17", "5k pace": "5:31", "10k pace": "5:46", "HMP": "6:10", "MP": "6:31" },
+      61: { "400 pace": "1:11", "800 pace": "2:30", "1600 pace": "5:01", "3k pace": "5:12", "5k pace": "5:26", "10k pace": "5:41", "HMP": "6:05", "MP": "6:26" },
+      62: { "400 pace": "1:10", "800 pace": "2:28", "1600 pace": "4:56", "3k pace": "5:07", "5k pace": "5:21", "10k pace": "5:36", "HMP": "6:00", "MP": "6:21" },
+      63: { "400 pace": "1:09", "800 pace": "2:26", "1600 pace": "4:51", "3k pace": "5:02", "5k pace": "5:16", "10k pace": "5:31", "HMP": "5:55", "MP": "6:16" },
+      64: { "400 pace": "1:08", "800 pace": "2:24", "1600 pace": "4:46", "3k pace": "4:57", "5k pace": "5:11", "10k pace": "5:26", "HMP": "5:50", "MP": "6:11" },
+      65: { "400 pace": "1:07", "800 pace": "2:22", "1600 pace": "4:41", "3k pace": "4:52", "5k pace": "5:06", "10k pace": "5:21", "HMP": "5:45", "MP": "6:06" }
+    };
 
     function interpolateVDOT(timeSec) {
       for (let i = 0; i < vdotTable5k.length - 1; i++) {
@@ -130,7 +145,7 @@
         const v2 = vdotTable5k[i + 1].vdot;
         if (timeSec >= t1 && timeSec <= t2) {
           const ratio = (timeSec - t1) / (t2 - t1);
-          return Math.round((v1 + (v2 - v1) * ratio) * 10) / 10;
+          return Math.round((v1 + (v2 - v1) * ratio));
         }
       }
       return timeSec < vdotTable5k[0].seconds ? vdotTable5k[0].vdot : vdotTable5k[vdotTable5k.length - 1].vdot;
@@ -138,21 +153,11 @@
 
     function getValidPaces(distance) {
       const index = [100, 200, 400, 600, 800, 1000, 1200, 1609].indexOf(distance);
-      return index < 0 ? [] : paceZones.slice(index + 2);
+      return index < 0 ? [] : Object.keys(danielsPaces[60]).slice(index + 2);
     }
 
-    function getRandomWorkout() {
+    function getRandomWorkout(vdot) {
       const distances = [100, 200, 400, 600, 800, 1000, 1200, 1609];
-      const paceValues = {
-        "400 pace": 4.7,
-        "800 pace": 4.9,
-        "1600 pace": 5.1,
-        "3k pace": 5.3,
-        "5k pace": 5.5,
-        "10k pace": 5.7,
-        "HMP": 6.0,
-        "MP": 6.3
-      };
       const meters = distances[Math.floor(Math.random() * distances.length)];
       let reps = 1;
       if (meters === 100) reps = 4;
@@ -161,7 +166,7 @@
       while (reps * meters > 1609) reps--;
       const validPaces = meters === 100 ? ["all out"] : meters === 200 ? ["all out", "400 pace"] : getValidPaces(meters);
       const paceKey = validPaces[Math.floor(Math.random() * validPaces.length)];
-      return { meters, reps, paceKey, paceValue: paceValues[paceKey] };
+      return { meters, reps, paceKey };
     }
 
     function generateWorkout() {
@@ -176,17 +181,13 @@
       const seconds = parseInt(match[2]);
       const totalSeconds = minutes * 60 + seconds;
       const vdot = interpolateVDOT(totalSeconds);
-      const workout = getRandomWorkout();
+      const workout = getRandomWorkout(vdot);
       let paceStr;
 
       if (workout.paceKey === "all out") {
         paceStr = "100% effort";
       } else {
-        const paceMin = workout.paceValue * (workout.meters / 1000);
-        const totalSec = Math.round(paceMin * 60);
-        const m = Math.floor(totalSec / 60);
-        const s = totalSec % 60;
-        paceStr = `${m}:${s.toString().padStart(2, '0')}`;
+        paceStr = danielsPaces[vdot][workout.paceKey] || "N/A";
       }
 
       document.getElementById("result").style.display = "block";
@@ -201,22 +202,14 @@
 
     function showPaceChart(vdot) {
       const chart = document.getElementById("paceChart");
-      const paceValues = {
-        "400 pace": 4.7,
-        "800 pace": 4.9,
-        "1600 pace": 5.1,
-        "3k pace": 5.3,
-        "5k pace": 5.5,
-        "10k pace": 5.7,
-        "HMP": 6.0,
-        "MP": 6.3
-      };
+      const paces = danielsPaces[vdot];
+      if (!paces) {
+        chart.innerHTML = "No data for this VDOT";
+        return;
+      }
       let html = `<table><tr><th>Pace Type</th><th>min/mile</th></tr>`;
-      for (const [type, perK] of Object.entries(paceValues)) {
-        const perMile = perK * 1.609;
-        const min = Math.floor(perMile);
-        const sec = Math.round((perMile - min) * 60);
-        html += `<tr><td>${type}</td><td>${min}:${sec.toString().padStart(2, '0')}</td></tr>`;
+      for (const type of Object.keys(paces)) {
+        html += `<tr><td>${type}</td><td>${paces[type]}</td></tr>`;
       }
       html += `</table>`;
       chart.innerHTML = html;
