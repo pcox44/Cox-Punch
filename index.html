@@ -37,12 +37,9 @@
       width: 100%;
       font-size: 1rem;
     }
-    input, select, button, output {
+    input, select, button {
       padding: 0.5rem;
       border-radius: 4px;
-    }
-    input[type=range] {
-      width: 100%;
     }
     button {
       background-color: #2a4d69;
@@ -80,18 +77,17 @@
 <body>
   <div class="container">
     <h1>🏋️‍♂️ Cox Punch</h1>
-    <label for="timeSlider">Select your recent 5K time:</label>
-    <input type="range" id="timeSlider" min="960" max="1200" step="1" value="1020" oninput="updateTimeDisplay(this.value)">
-    <output id="timeDisplay">17:00</output>
+    <label for="timeInput">Enter your recent 5K time (mm:ss):</label>
+    <input type="text" id="timeInput" placeholder="e.g. 17:03">
 
-    <button onclick="generateWorkoutFromSlider()">Generate Workout</button>
+    <button onclick="generateWorkoutFromInput()">Generate Workout</button>
 
     <div class="result" id="result" style="display:none;"></div>
   </div>
 
   <div class="sidebar">
     <h3>Your VDOT Training Paces</h3>
-    <div id="paceChart">Adjust slider to see paces</div>
+    <div id="paceChart">Enter time to see paces</div>
   </div>
 
   <script>
@@ -115,22 +111,31 @@
       { seconds: 1200, vdot: 44 }
     ];
 
-    function secondsToTimeStr(sec) {
-      const m = Math.floor(sec / 60);
-      const s = sec % 60;
-      return `${m}:${s.toString().padStart(2, '0')}`;
+    function interpolateVDOT(timeSec) {
+      for (let i = 0; i < vdotTable5k.length - 1; i++) {
+        const t1 = vdotTable5k[i].seconds;
+        const t2 = vdotTable5k[i + 1].seconds;
+        const v1 = vdotTable5k[i].vdot;
+        const v2 = vdotTable5k[i + 1].vdot;
+        if (timeSec >= t1 && timeSec <= t2) {
+          const ratio = (timeSec - t1) / (t2 - t1);
+          return Math.round((v1 + (v2 - v1) * ratio));
+        }
+      }
+      return timeSec < vdotTable5k[0].seconds ? vdotTable5k[0].vdot : vdotTable5k[vdotTable5k.length - 1].vdot;
     }
 
-    function updateTimeDisplay(val) {
-      const time = secondsToTimeStr(val);
-      document.getElementById('timeDisplay').value = time;
-      const vdot = interpolateVDOT(+val);
-      showPaceChart(vdot);
-    }
-
-    function generateWorkoutFromSlider() {
-      const sec = +document.getElementById("timeSlider").value;
-      const vdot = interpolateVDOT(sec);
+    function generateWorkoutFromInput() {
+      const input = document.getElementById("timeInput").value.trim();
+      const match = input.match(/^(\d+):(\d{1,2})$/);
+      if (!match) {
+        alert("Please enter time in mm:ss format");
+        return;
+      }
+      const minutes = parseInt(match[1]);
+      const seconds = parseInt(match[2]);
+      const totalSeconds = minutes * 60 + seconds;
+      const vdot = interpolateVDOT(totalSeconds);
       const workout = getRandomWorkout(vdot);
       let paceStr;
       if (workout.paceKey === "all out") {
@@ -144,9 +149,10 @@
         <p><strong>Pace:</strong> ${workout.paceKey}</p>
         <p><strong>Target per rep:</strong> ${paceStr}</p>
         <p><strong>Your VDOT:</strong> ${vdot}</p>`;
+      showPaceChart(vdot);
     }
 
-    // include the rest of the original script here
+    // ensure danielsPaces and getRandomWorkout are already defined
   </script>
 </body>
 </html>
