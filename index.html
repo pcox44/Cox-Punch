@@ -67,6 +67,17 @@
   <div id="paceChart">Enter a time to see pace chart</div>
 </div>
 
+const minPaceForDistance = {
+  "100": null, // special case — always all out
+  "200": null,
+  "400": "mile pace",
+  "600": "mile pace",
+  "800": "3k pace",
+  "1000": "3k pace",
+  "1200": "10k Punch Pace",
+  "mile": "10k Punch Pace"
+};
+  
 <script>
   const distances = ["100", "200", "400", "600", "800", "1000", "1200", "mile", "strides"];
   const paces = ["800m pace", "mile pace", "3k pace", "5k Punch Pace", "10k Punch Pace", "HMP", "MP"];
@@ -217,13 +228,16 @@ paceChart["MP Punch Pace"] = {
     } else if (dist === "strides") {
       output += `<p><strong>Workout:</strong> 6 strides at max effort</p>`;
     } else {
-      const index = distanceMapping[dist];
       let validPaces;
-
-      if (dist === "1200" || dist === "mile") {
-        validPaces = ["10k Punch Pace", "HMP", "MP"];
+      if (dist === "100") {
+  // handled separately below
+        validPaces = [];
+      } else if (dist === "strides") {
+        validPaces = [];
       } else {
-        validPaces = paces.filter(p => paceMapping[p] >= index + 2);
+        const minPace = minPaceForDistance[dist];
+        const minIndex = paceMapping[minPace];
+        validPaces = paces.filter(p => paceMapping[p] >= minIndex);
       }
 
       const paceType = validPaces[Math.floor(Math.random() * validPaces.length)];
