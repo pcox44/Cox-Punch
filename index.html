@@ -1,261 +1,265 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cox Punch</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 2rem;
-      max-width: 900px;
-      margin: auto;
-      background-color: #f8f8f8;
-      display: flex;
-      flex-direction: row;
-      gap: 2rem;
+    :root{
+      --bg:#0b1020;
+      --card:#131a33;
+      --muted:#9db2ff;
+      --text:#e9edff;
+      --accent:#6ea8fe;
+      --accent-2:#b3d4ff;
+      --border:rgba(255,255,255,.08);
     }
-    .main {
-      flex: 2;
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 10% -10%, #18224a 0%, transparent 60%) no-repeat, var(--bg);
+      color:var(--text);
+      min-height:100dvh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
     }
-    .sidebar {
-      flex: 1;
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 1rem;
-      font-size: 0.9rem;
+    .wrap{
+      width:100%;
+      max-width:720px;
     }
-    h1 {
-      text-align: center;
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius:20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+      padding:20px;
+      backdrop-filter: blur(6px);
     }
-    input, select, button {
-      padding: 0.5rem;
-      font-size: 1rem;
-      margin-top: 0.5rem;
+    h1{
+      margin:0 0 6px;
+      text-align:center;
+      letter-spacing:.3px;
+      font-size:clamp(22px, 2.8vw, 32px);
     }
-    .result {
-      margin-top: 2rem;
-      padding: 1rem;
-      background-color: #fff;
-      border: 1px solid #ccc;
+    .sub{
+      text-align:center;
+      color:var(--muted);
+      font-size:clamp(13px, 2.2vw, 15px);
+      margin-bottom:18px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
     }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.3rem;
-      text-align: center;
+    .field{
+      flex:1 1 200px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    label{font-size:14px;color:var(--accent-2)}
+    input[type="text"]{
+      background: #0e1530;
+      border:1px solid var(--border);
+      color:var(--text);
+      border-radius:12px;
+      padding:12px 14px;
+      font-size:16px;
+      outline:none;
+      width:100%;
+    }
+    .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;}
+    button{
+      cursor:pointer;
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, #1a2450, #152045);
+      color:var(--text);
+      padding:12px 16px;
+      border-radius:12px;
+      font-size:15px;
+      transition: transform .04s ease, box-shadow .2s ease, background .2s ease;
+      box-shadow: 0 6px 14px rgba(0,0,0,.25);
+      flex:0 0 auto;
+    }
+    button:active{ transform: translateY(1px); }
+    .result{
+      margin-top:14px;
+      padding:16px;
+      border:1px dashed var(--border);
+      border-radius:16px;
+      background: #0e1530;
+      display:none;
+    }
+    .result h2{
+      margin:0 0 10px;
+      font-size:18px;
+      letter-spacing:.2px;
+    }
+    .kv{display:grid; grid-template-columns: 1fr auto; gap:8px 12px; align-items:center; font-size:16px}
+    .k{color:var(--accent-2)}
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    }
+    .foot{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:10px;
+      text-align:center;
+    }
+    @media (max-width:560px){
+      .kv{grid-template-columns: 1fr}
     }
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <div class="card">
+      <h1>🥊 Cox Punch</h1>
+      <div class="sub">Enter your recent 5K time and I’ll build a punchy interval under 1 mile with a randomized target pace.</div>
 
-<div class="main">
-  <h1>🥊🥊🥊 Cox Punch 🥊🥊🥊</h1>
+      <div class="row">
+        <div class="field">
+          <label for="timeInput">5K time (mm:ss)</label>
+          <input id="timeInput" type="text" inputmode="numeric" placeholder="e.g. 17:30" autocomplete="off" />
+        </div>
+      </div>
 
-  <label for="timeInput">Enter your recent 5K time (mm:ss):</label><br>
-  <input type="text" id="timeInput" placeholder="e.g. 20:30"><br>
+      <div class="btns">
+        <button id="generateBtn">Generate workout</button>
+      </div>
 
-  <button id="generateBtn">Generate Workout</button>
+      <div class="result" id="result">
+        <h2>Today's workout</h2>
+        <div class="kv">
+          <div class="k">Distance × reps</div><div><span class="pill" id="outDist">—</span></div>
+          <div class="k">Target pace</div><div><span class="pill" id="outPace">—</span> <span id="paceNote"></span></div>
+          <div class="k">Rep Split</div><div><span class="pill" id="outSplit">—</span></div>
+        </div>
+        <div class="foot" id="vdotNote"></div>
+      </div>
+    </div>
+  </div>
 
-  <div class="result" id="result" style="display:none;"></div>
-</div>
-
-<div class="sidebar">
-  <h3>Your VDOT Punch Paces</h3>
-  <div id="paceChart">Enter a time to see pace chart</div>
-</div>
-
-  
 <script>
-  const distances = ["100", "200", "400", "600", "800", "1000", "1200", "mile", "strides"];
-  const paces = ["800m pace", "mile pace", "3k pace", "5k Punch Pace", "10k Punch Pace", "HMP", "MP"];
+const distances = ["100", "200", "400", "600", "800", "1000", "1200", "mile"];
+const metersLookup = { "100":100, "200":200, "400":400, "600":600, "800":800, "1000":1000, "1200":1200, "mile":1609 };
 
-  const minPaceForDistance = {
-    "100": null, // special case — always all out
-    "200": "800m pace",
-    "400": "mile pace",
-    "600": "mile pace",
-    "800": "3k pace",
-    "1000": "5k Punch Pace",
-    "1200": "HMP",
-    "mile": "MP"
-  };
-  const paceMapping = {
-    "800m pace": 0,
-    "mile pace": 1,
-    "3k pace": 2,
-    "5k Punch Pace": 3,
-    "10k Punch Pace": 4,
-    "HMP": 5,
-    "MP": 6
-  };
-
-  const distanceMapping = {
-    "100": 0,
-    "200": 0,
-    "400": 1,
-    "600": 2,
-    "800": 3,
-    "1000": 4,
-    "1200": 5,
-    "mile": 6
-  };
-
-  const metersLookup = {
-    "100": 100,
-    "200": 200,
-    "400": 400,
-    "600": 600,
-    "800": 800,
-    "1000": 1000,
-    "1200": 1200,
-    "mile": 1609
-  };
-
-  const validVDOTs = [65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45];
-
-  const paceChart = {};
-  for (let pace of paces) paceChart[pace] = {};
-  paceChart["800m pace"] = {
-  65: "4:08", 64: "4:10", 63: "4:12", 62: "4:14", 61: "4:16", 60: "4:18",
-  59: "4:20", 58: "4:22", 57: "4:24", 56: "4:26", 55: "4:28", 54: "4:30",
-  53: "4:32", 52: "4:34", 51: "4:36", 50: "4:38", 49: "4:40", 48: "4:42",
-  47: "4:44", 46: "4:46", 45: "4:48"
+const minPaceForDistance = {
+  "100": null,
+  "200": "800m pace",
+  "400": "mile pace",
+  "600": "mile pace",
+  "800": "3k pace",
+  "1000": "5k Punch Pace",
+  "1200": "HMP",
+  "mile": "MP"
 };
 
-paceChart["mile pace"] = {
-  65: "4:26", 64: "4:29", 63: "4:32", 62: "4:35", 61: "4:38", 60: "4:41",
-  59: "4:44", 58: "4:47", 57: "4:50", 56: "4:53", 55: "4:56", 54: "4:59",
-  53: "5:02", 52: "5:05", 51: "5:08", 50: "5:11", 49: "5:14", 48: "5:17",
-  47: "5:20", 46: "5:23", 45: "5:26"
+const paceChart = {
+"800m pace": {65:"4:08",64:"4:10",63:"4:12",62:"4:14",61:"4:16",60:"4:18",59:"4:20",58:"4:22",57:"4:24",56:"4:26",55:"4:28",54:"4:30",53:"4:32",52:"4:34",51:"4:36",50:"4:38",49:"4:40",48:"4:42",47:"4:44",46:"4:46",45:"4:48"},
+"mile pace": {65:"4:26",64:"4:29",63:"4:32",62:"4:35",61:"4:38",60:"4:41",59:"4:44",58:"4:47",57:"4:50",56:"4:53",55:"4:56",54:"4:59",53:"5:02",52:"5:05",51:"5:08",50:"5:11",49:"5:14",48:"5:17",47:"5:20",46:"5:23",45:"5:26"},
+"3k pace": {65:"4:41",64:"4:44",63:"4:47",62:"4:50",61:"4:53",60:"4:56",59:"4:59",58:"5:02",57:"5:05",56:"5:08",55:"5:11",54:"5:14",53:"5:17",52:"5:20",51:"5:23",50:"5:26",49:"5:29",48:"5:32",47:"5:35",46:"5:38",45:"5:41"},
+"5k Punch Pace": {65:"4:52",64:"4:55",63:"4:58",62:"5:01",61:"5:04",60:"5:07",59:"5:10",58:"5:13",57:"5:16",56:"5:19",55:"5:22",54:"5:25",53:"5:28",52:"5:31",51:"5:34",50:"5:37",49:"5:40",48:"5:43",47:"5:46",46:"5:49",45:"5:52"},
+"10k Punch Pace": {65:"5:08",64:"5:11",63:"5:14",62:"5:17",61:"5:20",60:"5:23",59:"5:26",58:"5:29",57:"5:32",56:"5:35",55:"5:38",54:"5:41",53:"5:44",52:"5:47",51:"5:50",50:"5:53",49:"5:56",48:"5:59",47:"6:02",46:"6:05",45:"6:08"},
+"HMP": {65:"5:24",64:"5:27",63:"5:30",62:"5:33",61:"5:36",60:"5:39",59:"5:42",58:"5:45",57:"5:48",56:"5:51",55:"5:54",54:"5:57",53:"6:00",52:"6:03",51:"6:06",50:"6:09",49:"6:12",48:"6:15",47:"6:18",46:"6:21",45:"6:24"},
+"MP": {65:"5:45",64:"5:48",63:"5:51",62:"5:54",61:"5:57",60:"6:00",59:"6:03",58:"6:06",57:"6:09",56:"6:12",55:"6:15",54:"6:18",53:"6:21",52:"6:24",51:"6:27",50:"6:30",49:"6:33",48:"6:36",47:"6:39",46:"6:42",45:"6:45"}
 };
 
-paceChart["3k pace"] = {
-  65: "4:41", 64: "4:44", 63: "4:47", 62: "4:50", 61: "4:53", 60: "4:56",
-  59: "4:59", 58: "5:02", 57: "5:05", 56: "5:08", 55: "5:11", 54: "5:14",
-  53: "5:17", 52: "5:20", 51: "5:23", 50: "5:26", 49: "5:29", 48: "5:32",
-  47: "5:35", 46: "5:38", 45: "5:41"
-};
+const vdotTable = [
+  { time:"15:45", vdot:65 },{ time:"16:00", vdot:64 },{ time:"16:15", vdot:63 },{ time:"16:30", vdot:62 },{ time:"16:45", vdot:61 },{ time:"17:00", vdot:60 },{ time:"17:15", vdot:59 },{ time:"17:30", vdot:58 },{ time:"17:45", vdot:57 },
+  { time:"18:00", vdot:56 },{ time:"18:15", vdot:55 },{ time:"18:30", vdot:54 },{ time:"18:45", vdot:53 },{ time:"19:00", vdot:52 },{ time:"19:15", vdot:51 },{ time:"19:30", vdot:50 },{ time:"19:45", vdot:49 },{ time:"20:00", vdot:48 },{ time:"20:15", vdot:47 },{ time:"20:30", vdot:46 },{ time:"20:45", vdot:45 }
+];
 
-paceChart["5k Punch Pace"] = {
-  65: "4:52", 64: "4:55", 63: "4:58", 62: "5:01", 61: "5:04", 60: "5:07",
-  59: "5:10", 58: "5:13", 57: "5:16", 56: "5:19", 55: "5:22", 54: "5:25",
-  53: "5:28", 52: "5:31", 51: "5:34", 50: "5:37", 49: "5:40", 48: "5:43",
-  47: "5:46", 46: "5:49", 45: "5:52"
-};
+const toSec = t => { const [m,s]=t.split(":").map(Number); return (m*60+s)|0; };
+const toMMSS = sec => { const m=Math.floor(sec/60); const s=Math.max(0,Math.round(sec-m*60)); return m+":"+s.toString().padStart(2,"0"); };
 
-paceChart["10k Punch Pace"] = {
-  65: "5:08", 64: "5:11", 63: "5:14", 62: "5:17", 61: "5:20", 60: "5:23",
-  59: "5:26", 58: "5:29", 57: "5:32", 56: "5:35", 55: "5:38", 54: "5:41",
-  53: "5:44", 52: "5:47", 51: "5:50", 50: "5:53", 49: "5:56", 48: "5:59",
-  47: "6:02", 46: "6:05", 45: "6:08"
-};
+function estimateVDOT(minutes, seconds){
+  const timeSec = minutes*60 + seconds;
+  for (let i=0;i<vdotTable.length;i++){
+    const [m,s] = vdotTable[i].time.split(":").map(Number);
+    const comp = m*60 + s;
+    if (timeSec <= comp) return vdotTable[i].vdot;
+  }
+  return 45;
+}
 
-paceChart["HMP"] = {
-  65: "5:24", 64: "5:27", 63: "5:30", 62: "5:33", 61: "5:36", 60: "5:39",
-  59: "5:42", 58: "5:45", 57: "5:48", 56: "5:51", 55: "5:54", 54: "5:57",
-  53: "6:00", 52: "6:03", 51: "6:06", 50: "6:09", 49: "6:12", 48: "6:15",
-  47: "6:18", 46: "6:21", 45: "6:24"
-};
+function pickDistance(){ return distances[Math.floor(Math.random()*distances.length)]; }
+function chooseReps(meters){ const maxReps=Math.max(1,Math.floor(1609/meters)); return Math.floor(Math.random()*maxReps)+1; }
 
-paceChart["MP"] = {
-  65: "5:45", 64: "5:48", 63: "5:51", 62: "5:54", 61: "5:57", 60: "6:00",
-  59: "6:03", 58: "6:06", 57: "6:09", 56: "6:12", 55: "6:15", 54: "6:18",
-  53: "6:21", 52: "6:24", 51: "6:27", 50: "6:30", 49: "6:33", 48: "6:36",
-  47: "6:39", 46: "6:42", 45: "6:45"
-};
+function randomPaceFor(distance, vdot){
+  if (distance === "100") return null;
+  const startCat = minPaceForDistance[distance];
+  const fast = paceChart[startCat]?.[vdot];
+  const slow = paceChart["MP"]?.[vdot];
+  if (!fast || !slow) return null;
+  const lo = Math.min(toSec(fast), toSec(slow));
+  const hi = Math.max(toSec(fast), toSec(slow));
+  const r = Math.floor(lo + Math.random()*(hi - lo + 1));
+  return toMMSS(r);
+}
 
+const input = document.getElementById("timeInput");
+const resultBox = document.getElementById("result");
+const outDist = document.getElementById("outDist");
+const outPace = document.getElementById("outPace");
+const outSplit = document.getElementById("outSplit");
+const vdotNote = document.getElementById("vdotNote");
+const paceNote = document.getElementById("paceNote");
 
-  function estimateVDOT(minutes, seconds) {
-    const timeSec = minutes * 60 + seconds;
-    const vdotTable = [
-      { time: "15:45", vdot: 65 }, { time: "16:00", vdot: 64 }, { time: "16:15", vdot: 63 },
-      { time: "16:30", vdot: 62 }, { time: "16:45", vdot: 61 }, { time: "17:00", vdot: 60 },
-      { time: "17:15", vdot: 59 }, { time: "17:30", vdot: 58 }, { time: "17:45", vdot: 57 },
-      { time: "18:00", vdot: 56 }, { time: "18:15", vdot: 55 }, { time: "18:30", vdot: 54 },
-      { time: "18:45", vdot: 53 }, { time: "19:00", vdot: 52 }, { time: "19:15", vdot: 51 },
-      { time: "19:30", vdot: 50 }, { time: "19:45", vdot: 49 }, { time: "20:00", vdot: 48 },
-      { time: "20:15", vdot: 47 }, { time: "20:30", vdot: 46 }, { time: "20:45", vdot: 45 }
-    ];
-    for (let i = 0; i < vdotTable.length; i++) {
-      const [min, sec] = vdotTable[i].time.split(":" ).map(Number);
-      const compSec = min * 60 + sec;
-      if (timeSec <= compSec) return vdotTable[i].vdot;
+(function init(){
+  const saved = localStorage.getItem("coxpunch_5k");
+  if (saved) input.value = saved;
+})();
+
+document.getElementById("generateBtn").addEventListener("click", () => {
+  const v = (input.value||"").trim();
+  const m = v.match(/^(\d{1,2}):([0-5]\d)$/);
+  if(!m){ alert("Enter 5K time as mm:ss (e.g., 17:30)"); input.focus(); return; }
+
+  localStorage.setItem("coxpunch_5k", v);
+
+  const minutes = parseInt(m[1],10);
+  const seconds = parseInt(m[2],10);
+  const vdot = estimateVDOT(minutes, seconds);
+
+  let distance = pickDistance();
+  const meters = metersLookup[distance];
+  let reps = chooseReps(meters);
+
+  let targetPaceText = "—";
+  let splitText = "—";
+
+  if (distance === "100"){
+    reps = 4;
+    targetPaceText = "All out";
+    splitText = "All out";
+    paceNote.textContent = "";
+  } else {
+    const rp = randomPaceFor(distance, vdot);
+    targetPaceText = rp ? (rp + " /mi") : "—";
+    if (rp){
+      const paceSec = toSec(rp);
+      const repTimeSec = (meters / 1609) * paceSec;
+      splitText = toMMSS(repTimeSec);
     }
-    return 45;
+    paceNote.textContent = "";
   }
 
-  function showPaceChart(vdot) {
-    let html = "<table><tr><th>Punch Pace</th><th>min/mi</th></tr>";
-    for (let pace in paceChart) {
-      html += `<tr><td>${pace}</td><td>${paceChart[pace][vdot] || "--"}</td></tr>`;
-    }
-    html += "</table>";
-    document.getElementById("paceChart").innerHTML = html;
-  }
+  outDist.textContent = (distance === "mile" ? "mile" : distance + "m") + " × " + reps;
+  outPace.textContent = targetPaceText;
+  outSplit.textContent = splitText;
+  vdotNote.textContent = "VDOT ≈ " + vdot + " based on 5K " + minutes + ":" + seconds.toString().padStart(2,"0");
 
-  function chooseRepCount(metersPerRep) {
-    const reps = [1, 2, 3, 4];
-    const weights = [0.5, 0.25, 0.15, 0.10];
-    let filtered = reps.filter((r, i) => r * metersPerRep <= 1609);
-    let totalWeight = filtered.reduce((sum, r, i) => sum + weights[i], 0);
-    let rnd = Math.random() * totalWeight;
-    for (let i = 0; i < filtered.length; i++) {
-      if (rnd < weights[i]) return filtered[i];
-      rnd -= weights[i];
-    }
-    return 1;
-  }
-
-  function generateWorkout() {
-    const input = document.getElementById("timeInput").value.trim();
-    const match = input.match(/^(\d+):(\d{1,2})$/);
-    if (!match) return alert("Enter time in mm:ss format");
-
-    const minutes = parseInt(match[1]);
-    const seconds = parseInt(match[2]);
-    const vdot = estimateVDOT(minutes, seconds);
-    showPaceChart(vdot);
-
-    const dist = distances[Math.floor(Math.random() * distances.length)];
-    let output = `<h2>Today's Workout</h2>`;
-
-    if (dist === "100") {
-      output += `<p><strong>Distance:</strong> 100m × 4</p>`;
-      output += `<p><strong>Pace:</strong> All out</p>`;
-    } else if (dist === "strides") {
-      output += `<p><strong>Workout:</strong> 6 strides at max effort</p>`;
-    } else {
-      let validPaces;
-      if (dist === "100") {
-  // handled separately below
-        validPaces = [];
-      } else if (dist === "strides") {
-        validPaces = [];
-      } else {
-        const minPace = minPaceForDistance[dist];
-        const minIndex = paceMapping[minPace];
-        validPaces = paces.filter(p => paceMapping[p] >= minIndex);
-      }
-
-      const paceType = validPaces[Math.floor(Math.random() * validPaces.length)];
-      const meters = metersLookup[dist];
-      const reps = chooseRepCount(meters);
-      const paceStr = paceChart[paceType]?.[vdot];
-      output += `<p><strong>Distance:</strong> ${dist} × ${reps}</p>`;
-      output += `<p><strong>Pace:</strong> ${paceType}</p>`;
-      output += `<p><strong>Target Pace:</strong> ${paceStr || "--"} per mile</p>`;
-    }
-
-    output += `<p><em>VDOT ~${vdot} based on your 5K time of ${minutes}:${seconds.toString().padStart(2, '0')}</em></p>`;
-    document.getElementById("result").style.display = "block";
-    document.getElementById("result").innerHTML = output;
-  }
-
-  document.getElementById("generateBtn").addEventListener("click", generateWorkout);
+  resultBox.style.display = "block";
+});
 </script>
-
 </body>
 </html>
